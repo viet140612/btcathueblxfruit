@@ -126,27 +126,18 @@ app.add_middleware(
 from fastapi import FastAPI, Request
 
 # ===== TEST HOME =====
+app = FastAPI()
+
+@app = FastAPI()
+
 @app.get("/")
-def home():
-    return {"status": "ok"}
+async def home():
+    return {"ok": True}
 
-
-from fastapi import Query
-
-# ===== VERIFY LINK =====
 @app.get("/verify-link")
-async def verify_link(
-    key: str = Query(...),
-    ip: str = Query(...),
-    type: str = Query(...)
-):
-    print("VERIFY:", key, ip, type)
+async def verify_link(key: str, ip: str, type: str):
+    return {"success": True}
 
-    # TODO: thêm logic check IP / key ở đây
-    return {
-        "success": True,
-        "message": "OK"
-    }
 
 
 

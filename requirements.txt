@@ -6,3 +6,4 @@ uvicorn
 aiohttp
 requests
 flask
+python-dotenv

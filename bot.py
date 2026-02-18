@@ -126,9 +126,8 @@ app.add_middleware(
 from fastapi import FastAPI, Request
 
 # ===== TEST HOME =====
-app = FastAPI()
 
-@app = FastAPI()
+app = FastAPI()
 
 @app.get("/")
 async def home():

@@ -42,8 +42,6 @@ intents = discord.Intents.default()
 intents.message_content = True 
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-if "pending_cards" not in data:
-    data["pending_cards"] = {}
 
 
 # ================= DỮ LIỆU BẢNG GIÁ MỚI =================
@@ -124,13 +122,21 @@ from fastapi import FastAPI, Request
 
 app = FastAPI()
 
+# ===== DATA GIẢ LẬP =====
+data = {
+    "users": {},
+    "pending_cards": {}
+}
+
+def save_data():
+    pass   # tạm thời, sau bạn thay bằng lưu file
+
+# ===== TEST HOME =====
 @app.get("/")
 def home():
     return {"status": "ok"}
 
-from fastapi import FastAPI, Request
-
-
+# ===== CALLBACK =====
 @app.post("/callback")
 async def callback(request: Request):
     body = await request.form()
@@ -143,7 +149,6 @@ async def callback(request: Request):
 
         uid = data["pending_cards"][request_id]["uid"]
 
-        # thẻ thành công
         if status == "1":
 
             if uid not in data["users"]:
@@ -152,13 +157,11 @@ async def callback(request: Request):
                     "total_nap": 0
                 }
 
-            # CỘNG TIỀN VÀO VÍ CHUNG
             data["users"][uid]["balance"] += value
             data["users"][uid]["total_nap"] += value
 
             print(f"✅ Đã cộng {value} cho {uid}")
 
-        # xoá giao dịch pending
         del data["pending_cards"][request_id]
         save_data()
 

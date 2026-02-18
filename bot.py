@@ -1784,4 +1784,10 @@ async def on_message(message):
     await message.reply(f"✅ Thành công! +**{reward:,} VNĐ**. Số dư: **{full_data['users'][user_id]['balance']:,} VNĐ**")
 
 # --- KẾT THÚC PHẦN EVENT ---
-bot.run(TOKEN)
+async def main():
+    async with bot:
+        await bot.start(TOKEN)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

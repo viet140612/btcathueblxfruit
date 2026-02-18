@@ -5,3 +5,4 @@ fastapi
 uvicorn
 aiohttp
 requests
+flask

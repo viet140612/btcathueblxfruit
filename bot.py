@@ -28,8 +28,9 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 TOKEN = "MTQ3MjEwMjk2ODAyMjEzOTA4NQ.GwoIDg.7vZ1KC4uOeUnyul7_bYqZs4TDJVdXEl24W_uWI"
 OWNER_ID = 1222153820679966761 
 
-TSR_PARTNER_ID = "98472153627"
-TSR_PARTNER_KEY = "3cb4f8c9017d86177efb478fe9d45285"
+TSR_PARTNER_ID = "46843352354"
+TSR_PARTNER_KEY = "3f9e74b0fa70705f17c58fa47875c190"
+API_URL = "https://thesieure.com/chargingws/v2"
 BASE_URL_BLOG = "https://keybotcaythue.blogspot.com/2026/02/key-cho-bot.html"
 LINKS_CONFIG_FILE = "links_config.json"
 KEYS_STORAGE_FILE = "active_keys.json" # File bot tự tạo để quản lý key tạm thời
@@ -41,6 +42,9 @@ intents = discord.Intents.default()
 intents.message_content = True 
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+if "pending_cards" not in data:
+    data["pending_cards"] = {}
+
 
 # ================= DỮ LIỆU BẢNG GIÁ MỚI =================
 DEFAULT_PRICES = {
@@ -124,13 +128,41 @@ app = FastAPI()
 def home():
     return {"status": "ok"}
 
+from fastapi import FastAPI, Request
+
+
 @app.post("/callback")
 async def callback(request: Request):
-    data = await request.json()
-    print(data)
+    body = await request.form()
+
+    request_id = body.get("request_id")
+    status = body.get("status")
+    value = int(body.get("value", 0))
+
+    if request_id in data["pending_cards"]:
+
+        uid = data["pending_cards"][request_id]["uid"]
+
+        # thẻ thành công
+        if status == "1":
+
+            if uid not in data["users"]:
+                data["users"][uid] = {
+                    "balance": 0,
+                    "total_nap": 0
+                }
+
+            # CỘNG TIỀN VÀO VÍ CHUNG
+            data["users"][uid]["balance"] += value
+            data["users"][uid]["total_nap"] += value
+
+            print(f"✅ Đã cộng {value} cho {uid}")
+
+        # xoá giao dịch pending
+        del data["pending_cards"][request_id]
+        save_data()
+
     return {"status": "success"}
-
-
 
 
 @app.get("/get-config")
@@ -690,38 +722,48 @@ async def setmoney(interaction: discord.Interaction, user: discord.Member, amoun
 
 
 
-@bot.tree.command(name="napthe", description="Liên hệ Admin để nạp tiền vào ví")
-async def napthe(interaction: discord.Interaction):
-    # Thay '1222153820679966761' bằng ID Discord thật của bạn
-    admin_id = "1222153820679966761" 
-    admin_url = f"https://discord.com/users/{admin_id}"
-    
-    embed = discord.Embed(
-        title="💳 HỆ THỐNG NẠP TIỀN",
-        description=(
-            "Hiện tại hệ thống nạp tự động đang bảo trì.\n\n"
-            f"Vui lòng nhấn nút bên dưới để liên hệ với Admin **@viet_casio**.\n\n"
-            "⚠️ **Lưu ý:**\n"
-            "- Chỉ giao dịch khi đúng trang cá nhân Admin.\n"
-            "- Vui lòng gửi ảnh màn hình bill sau khi chuyển khoản."
-        ),
-        color=0xf1c40f
+import random
+import requests
+
+
+# lưu tạm request_id -> user_id
+pending_cards = {}
+
+@bot.tree.command(name="napthe", description="Nạp thẻ vào ví")
+async def napthe(interaction: discord.Interaction,
+                 telco: str,
+                 amount: int,
+                 code: str,
+                 serial: str):
+
+    uid = str(interaction.user.id)
+
+    # request_id KHÔNG TRÙNG
+    request_id = str(uuid.uuid4())
+
+    # lưu vào data để restart không mất
+    data["pending_cards"][request_id] = {
+        "uid": uid,
+        "amount": amount
+    }
+    save_data()
+
+    payload = {
+        "telco": telco.upper(),
+        "code": code,
+        "serial": serial,
+        "amount": amount,
+        "request_id": request_id,
+        "partner_id": PARTNER_ID,
+        "sign": PARTNER_KEY
+    }
+
+    requests.post(API_URL, data=payload)
+
+    await interaction.response.send_message(
+        "⏳ Thẻ đã gửi, đang chờ xử lý...",
+        ephemeral=True
     )
-    
-    view = discord.ui.View()
-    # Nút bấm dẫn đến trang cá nhân
-    view.add_item(discord.ui.Button(
-        label="NHẮN TIN CHO ADMIN", 
-        url=admin_url, 
-        style=discord.ButtonStyle.link
-    ))
-    
-    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-
-
-
-# --- CẤU HÌNH ---
-
 
 @bot.tree.command(name="nhapkey", description="Nhập mã Key để nhận tiền thưởng")
 async def nhapkey(interaction: discord.Interaction, key: str):

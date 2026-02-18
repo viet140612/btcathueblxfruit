@@ -1,0 +1,45 @@
+{
+    "users": {
+        "1330854232353538132": {
+            "balance": 999942000,
+            "total_nap": 0,
+            "last_claim": "2026-02-16",
+            "daily_count": 0
+        },
+        "1222153820679966761": {
+            "balance": 3950,
+            "total_nap": 0,
+            "last_claim": "2026-02-16",
+            "daily_count": 0,
+            "daily_limit": {
+                "link4m": {
+                    "count": 1,
+                    "date": "2026-02-18"
+                },
+                "nhapma": {
+                    "count": 1,
+                    "date": "2026-02-17"
+                }
+            }
+        },
+        "1401440228572397711": {
+            "balance": 10000000,
+            "total_nap": 0
+        }
+    },
+    "orders": [],
+    "pending_cards": {},
+    "1222153820679966761": {
+        "balance": 1000
+    },
+    "ip_limits": {
+        "222.255.63.154_link4m": {
+            "count": 2,
+            "date": "2026-02-18"
+        },
+        "222.255.63.154_nhapma": {
+            "count": 1,
+            "date": "2026-02-17"
+        }
+    }
+}

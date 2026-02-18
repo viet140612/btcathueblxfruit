@@ -1,0 +1,12 @@
+{
+    "Link4M": {
+        "api_url": "https://link4m.co/api-shorten/v2",
+        "api_token": "6992c01de896613eeb1c7976",
+        "price": 500
+    },
+    "YeuMoney": {
+        "api_url": "https://yeumoney.com/QL_api.php",
+        "api_token": "d68dab4fa90dd7fb1763a886c4f34541e28dabde53d32bd3aa5be0ce3bc031a6",
+        "price": 500
+    }
+}

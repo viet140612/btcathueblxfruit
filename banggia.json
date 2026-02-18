@@ -1,0 +1,36 @@
+{
+    "Kiếm & Súng": {
+        "Kiếm Yama": 20000,
+        "Kiếm Tushita": 20000,
+        "CDK (Đủ 2 thanh + Mas)": 10000,
+        "Shark Anchor": 40000,
+        "Skull Guitar (Đủ NL)": 20000,
+        "TTK (10k/thanh, Mas 20k)": 50000,
+        "Dragon Hear": 40000,
+        "Dragon Storm": 50000
+    },
+    "Fighting Style": {
+        "Electric Claw": 10000,
+        "Dragon Talon": 20000,
+        "Karate": 10000,
+        "God Human (Đủ võ + Mas)": 20000,
+        "Suguine Art (Tim + NL)": 70000
+    },
+    "Nguyên Liệu": {
+        "Cày Mas (1-350)": 20000,
+        "10k Fragment": 10000,
+        "10k Beli": 20000
+    },
+    "Sea Event": {
+        "Săn Leviathan": 50000,
+        "Săn đảo núi lửa (1 đảo)": 20000,
+        "Lấy full đai": 70000
+    },
+    "Race (Tộc)": {
+        "1 Gear": 10000,
+        "Full Gear": 50000,
+        "Gạt cần": 20000,
+        "Tộc Cyborg (Key + Raid Law)": 40000,
+        "Tộc Goul": 20000
+    }
+}

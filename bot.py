@@ -108,76 +108,56 @@ LINK_CONFIGS = {
 storage_web_status = {} # Lưu IP và trạng thái từ Web
 
 # --- 2. KHỞI TẠO FASTAPI ---
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
 
-# Cấu hình CORS (Fix lỗi NameError CORSMiddleware)
+# Cấu hình CORS cho Render (cho phép Blogspot gọi API)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Có thể đổi thành domain blog của bạn để bảo mật hơn
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Cấu hình Ngrok (Bỏ qua trang cảnh báo)
-@app.middleware("http")
-async def add_ngrok_skip_header(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["ngrok-skip-browser-warning"] = "true"
-    return response
 
 from fastapi import FastAPI, Request
-
-app = FastAPI()
-
-# ===== DATA GIẢ LẬP =====
-data = {
-    "users": {},
-    "pending_cards": {}
-}
-
-def save_data():
-    pass   # tạm thời, sau bạn thay bằng lưu file
 
 # ===== TEST HOME =====
 @app.get("/")
 def home():
     return {"status": "ok"}
 
-# ===== CALLBACK =====
-@app.post("/callback")
-async def callback(request: Request):
-    body = await request.form()
 
-    request_id = body.get("request_id")
-    status = body.get("status")
-    value = int(body.get("value", 0))
+from fastapi import Query
 
-    if request_id in data["pending_cards"]:
+# ===== VERIFY LINK =====
+@app.get("/verify-link")
+async def verify_link(
+    key: str = Query(...),
+    ip: str = Query(...),
+    type: str = Query(...)
+):
+    print("VERIFY:", key, ip, type)
 
-        uid = data["pending_cards"][request_id]["uid"]
+    # TODO: thêm logic check IP / key ở đây
+    return {
+        "success": True,
+        "message": "OK"
+    }
 
-        if status == "1":
 
-            if uid not in data["users"]:
-                data["users"][uid] = {
-                    "balance": 0,
-                    "total_nap": 0
-                }
 
-            data["users"][uid]["balance"] += value
-            data["users"][uid]["total_nap"] += value
-
-            print(f"✅ Đã cộng {value} cho {uid}")
-
-        del data["pending_cards"][request_id]
-        save_data()
-
-    return {"status": "success"}
-
+import json
 
 @app.get("/get-config")
 async def get_config():
-    return LINK_CONFIGS
+    with open("links_config.json", "r", encoding="utf-8") as f:
+        data = json.load(f)  # <-- QUAN TRỌNG
+    return data
+
 
 @app.get("/update-ip")
 async def update_ip(key: str, ip: str, limit_reached: str = "false"):
@@ -187,11 +167,15 @@ async def update_ip(key: str, ip: str, limit_reached: str = "false"):
     return {"status": "success"}
 
 # --- 4. CHẠY SERVER API TRONG LUỒNG RIÊNG ---
+
+import os
+
 def run_api_server():
-    # Chạy trên 127.0.0.1 để Ngrok bắt được (Cổng 4999)
-    uvicorn.run(app, host="127.0.0.1", port=4999)
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 threading.Thread(target=run_api_server, daemon=True).start()
+
 
 # --- 5. CÁC HÀM HỖ TRỢ (ADMIN/JSON) ---
 def load_admins():
@@ -739,39 +723,55 @@ import requests
 # lưu tạm request_id -> user_id
 pending_cards = {}
 
-@bot.tree.command(name="napthe", description="Nạp thẻ vào ví")
-async def napthe(interaction: discord.Interaction,
-                 telco: str,
-                 amount: int,
-                 code: str,
-                 serial: str):
+from discord import app_commands
 
+@bot.tree.command(name="napthe", description="Nạp thẻ cào vào ví")
+@app_commands.choices(
+    telco=[
+        app_commands.Choice(name="Viettel", value="VIETTEL"),
+        app_commands.Choice(name="Mobifone", value="MOBIFONE"),
+        app_commands.Choice(name="Vinaphone", value="VINAPHONE"),
+        app_commands.Choice(name="Vietnamobile", value="VIETNAMOBILE"),
+    ],
+    amount=[
+        app_commands.Choice(name="10.000đ", value=10000),
+        app_commands.Choice(name="20.000đ", value=20000),
+        app_commands.Choice(name="50.000đ", value=50000),
+        app_commands.Choice(name="100.000đ", value=100000),
+        app_commands.Choice(name="200.000đ", value=200000),
+        app_commands.Choice(name="500.000đ", value=500000),
+    ]
+)
+async def napthe(
+    interaction: discord.Interaction,
+    telco: app_commands.Choice[str],
+    amount: app_commands.Choice[int],
+    code: str,
+    serial: str
+):
     uid = str(interaction.user.id)
 
-    # request_id KHÔNG TRÙNG
     request_id = str(uuid.uuid4())
 
-    # lưu vào data để restart không mất
     data["pending_cards"][request_id] = {
         "uid": uid,
-        "amount": amount
+        "amount": amount.value
     }
     save_data()
 
     payload = {
-        "telco": telco.upper(),
+        "telco": telco.value,
         "code": code,
         "serial": serial,
-        "amount": amount,
+        "amount": amount.value,
         "request_id": request_id,
         "partner_id": PARTNER_ID,
         "sign": PARTNER_KEY
     }
 
-    requests.post(API_URL, data=payload)
-
+    # gửi API...
     await interaction.response.send_message(
-        "⏳ Thẻ đã gửi, đang chờ xử lý...",
+        f"⏳ Đã gửi thẻ {amount.name} ({telco.name}), đang xử lý...",
         ephemeral=True
     )
 

@@ -21,11 +21,16 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware  # THIẾU DÒNG NÀY ĐÂY ÔNG NHÉ!
 import threading
 import uvicorn
+from dotenv import load_dotenv
 # Sửa lỗi hiển thị icon và tiếng Việt trên Terminal Windows
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+import os
 
-# ================= CONFIG =================
-TOKEN = "MTQ3MjEwMjk2ODAyMjEzOTA4NQ.GwoIDg.7vZ1KC4uOeUnyul7_bYqZs4TDJVdXEl24W_uWI"
+load_dotenv() 
+
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+
 OWNER_ID = 1222153820679966761 
 
 TSR_PARTNER_ID = "46843352354"
@@ -37,6 +42,8 @@ KEYS_STORAGE_FILE = "active_keys.json" # File bot tự tạo để quản lý ke
 DATA_FILE = "data.json"
 PRICE_FILE = "banggia.json"
 ADMIN_FILE = "admins.json"
+
+print("TOKEN =", TOKEN)
 
 intents = discord.Intents.default()
 intents.message_content = True 
